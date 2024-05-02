@@ -1,6 +1,7 @@
 package com.products.config;
 
 import com.products.service.UsuarioServiceIMP;
+import com.products.utils.JwtUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,18 +20,21 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
 
+    @Autowired
+    private JwtUtils jwtUtils;
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
 
         return httpSecurity
                 .csrf(csrf -> csrf.disable())
-                .httpBasic(Customizer.withDefaults())
+               .httpBasic(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(http -> {
 
@@ -42,6 +46,10 @@ public class SecurityConfig {
                     http.requestMatchers(HttpMethod.DELETE, "/user/eliminar/{usuarioID}").hasRole("ADMINISTRADOR");
                     http.requestMatchers(HttpMethod.PUT, "/user/actualizar/rol/{idRol}/permision/{idPermission}").hasRole("ADMINISTRADOR");
                     http.requestMatchers(HttpMethod.PUT, "/user/actualizar/usuario/{idUsuario}/rol/{idRol}").hasRole("ADMINISTRADOR");
+
+                    //PETICION PARA AUTHCONTROLLER
+                    http.requestMatchers(HttpMethod.POST,"/auth/login").permitAll();
+                    http.requestMatchers(HttpMethod.POST,"/auth/sign-up").permitAll();
 
                     //PETICION PARA PRODUCTOS
                     http.requestMatchers(HttpMethod.GET, "/producto").permitAll();
@@ -57,8 +65,8 @@ public class SecurityConfig {
                     http.requestMatchers(HttpMethod.GET, "/categoria/{idCategoria}").hasAnyRole("ADMINISTRADOR", "DEVELOPER", "USUARIO", "VISITANTE");
                     http.requestMatchers(HttpMethod.POST, "/categoria/crear").hasAnyRole("ADMINISTRADOR", "DEVELOPER");
 
-
                 })
+                .addFilterBefore(new JwtTokenValidador(jwtUtils), BasicAuthenticationFilter.class)
                 .build();
     }
 
@@ -77,8 +85,8 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return NoOpPasswordEncoder.getInstance();
-        //return new BCryptPasswordEncoder();
+        //return NoOpPasswordEncoder.getInstance();
+        return new BCryptPasswordEncoder();
     }
 
 

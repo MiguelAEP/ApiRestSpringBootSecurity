@@ -8,6 +8,7 @@ import lombok.Builder;
 import java.util.ArrayList;
 import java.util.List;
 
+@Builder
 @Entity
 public class Usuario {
 

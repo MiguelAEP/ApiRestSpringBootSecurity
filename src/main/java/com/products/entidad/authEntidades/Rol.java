@@ -1,10 +1,12 @@
 package com.products.entidad.authEntidades;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 
 
 import java.util.ArrayList;
 import java.util.List;
+
 
 @Entity
 public class Rol {
